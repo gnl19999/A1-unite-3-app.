@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dinamik Kelime Kartı | Yeni Liste 2</title>
+    <title>Dinamik Kelime Kartı | v2.2 (Final Görseller)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -18,6 +18,7 @@
             min-height: 100vh;
             margin: 0;
             justify-content: center;
+            user-select: none;
         }
 
         /* Kartın Kendisi */
@@ -30,10 +31,16 @@
             position: relative;
             margin-top: 20px;
             cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .card.active {
+            opacity: 1;
+            transform: translateY(0);
         }
         
-        /* Tıklama efekti */
         .card:active {
             transform: scale(0.98);
         }
@@ -45,15 +52,17 @@
             color: #1976D2;
             font-size: 28px; 
             cursor: pointer; 
-            transition: transform 0.2s; 
+            padding: 10px;
+            border-radius: 50%;
+            transition: background 0.2s; 
         }
-        .speaker-icon:hover { transform: scale(1.1); }
-        h1 { color: #2D3748; margin: 0; font-size: 36px; font-weight: 800; text-transform: capitalize; }
-        .meaning { color: #718096; margin-top: 5px; margin-left: 43px; font-size: 18px; font-weight: 500;}
-        .image-container { text-align: center; margin: 25px 0; position: relative; }
+        .speaker-icon:hover { background: #E3F2FD; }
         
-        /* Görsel boyutlandırma */
-        .main-img { max-width: 100%; height: 200px; object-fit: cover; border-radius: 10px; display: block; margin: 0 auto; } 
+        h1 { color: #2D3748; margin: 0; font-size: 36px; font-weight: 800; text-transform: capitalize; }
+        .meaning { color: #718096; margin-top: 5px; margin-left: 58px; font-size: 18px; font-weight: 500;}
+        .image-container { text-align: center; margin: 25px 0; position: relative; height: 200px; background: #eee; border-radius: 10px; overflow: hidden;}
+        
+        .main-img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: block; } 
         .flash-icon { position: absolute; bottom: 5px; right: 5px; color: #f6e05e; font-size: 24px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
         
         .box { 
@@ -64,10 +73,10 @@
             background: #F7FAFC;
         }
         .row { display: flex; gap: 10px; }
-        .tag { font-weight: bold; color: #1976D2; font-size: 14px; min-width: 30px; }
+        .tag { font-weight: bold; color: #1976D2; font-size: 14px; min-width: 35px; }
         .content { flex: 1; }
         .en-sentence { color: #2D3748; font-size: 16px; margin: 0 0 8px 0; line-height: 1.5; }
-        .highlight { color: #E53E3E; font-weight: bold; }
+        .highlight { color: #E53E3E; font-weight: bold; background: #fff5f5; padding: 0 4px; border-radius: 4px; }
         .divider { border-top: 1px dotted #CBD5E0; margin: 5px 0; }
         .tr-sentence { color: #718096; font-size: 15px; margin: 5px 0 0 0; }
         .synonyms-text { color: #2D3748; margin: 0; font-size: 15px; }
@@ -76,90 +85,96 @@
         /* Navigator Bilgisi */
         .info-bar {
             color: #718096;
-            margin-top: 10px;
+            margin-top: 20px;
             font-size: 14px;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
+        
+        .nav-hint { font-size: 12px; opacity: 0.6; margin-top: 5px;}
 
     </style>
 </head>
 <body>
 
-    <div id="card-container">
-        </div>
+    <div id="card-container"></div>
     
-    <div id="info-bar" class="info-bar">Yükleniyor...</div>
+    <div class="info-bar">
+        <span id="info-text">Yükleniyor...</span>
+    </div>
+    <div class="nav-hint">İpucu: Yön tuşlarını kullanabilirsiniz (← / →)</div>
 
     <script>
-        // Yeni Kelime Listesi (Görseller dinamik olarak kelimeye uygun çekilmektedir.)
+        // Güncellenmiş Kelime Listesi (13. ve 16. görseller değiştirildi)
         const wordList = [
-            { word: "article", meaning: "makale, eşya", example_en: "I read an [article] about science.", example_tr: "Bilim hakkında bir makale okudum.", synonyms: "piece, item", image: "https://loremflickr.com/350/180/article" },
-            { word: "artist", meaning: "sanatçı", example_en: "She is a famous modern [artist].", example_tr: "O, ünlü bir modern sanatçıdır.", synonyms: "painter, creator", image: "https://loremflickr.com/350/180/artist" },
-            { word: "as", meaning: "olarak, gibi", example_en: "He works [as] a teacher.", example_tr: "O, bir öğretmen olarak çalışıyor.", synonyms: "like, since", image: "https://loremflickr.com/350/180/teacher" },
-            { word: "ask", meaning: "sormak, istemek", example_en: "Can I [ask] you a question?", example_tr: "Sana bir soru sorabilir miyim?", synonyms: "inquire, request", image: "https://loremflickr.com/350/180/ask" },
-            { word: "at", meaning: "-de, -da (yerde)", example_en: "I am [at] the bus stop.", example_tr: "Otobüs durağındayım.", synonyms: "near, in", image: "https://loremflickr.com/350/180/bus,stop" },
-            { word: "August", meaning: "Ağustos", example_en: "Summer ends in [August].", example_tr: "Yaz, Ağustosta biter.", synonyms: "summer month", image: "https://loremflickr.com/350/180/August" },
-            { word: "aunt", meaning: "teyze, hala", example_en: "My [aunt] lives in Ankara.", example_tr: "Teyzem Ankara'da yaşıyor.", synonyms: "relative", image: "https://loremflickr.com/350/180/aunt" },
-            { word: "autumn", meaning: "sonbahar", example_en: "Leaves change color in [autumn].", example_tr: "Sonbaharda yapraklar renk değiştirir.", synonyms: "fall", image: "https://loremflickr.com/350/180/autumn" },
-            { word: "away", meaning: "uzakta, uzağa", example_en: "Go [away] from the window.", example_tr: "Pencereden uzaklaş.", synonyms: "far, off", image: "https://loremflickr.com/350/180/away" },
-            { word: "Terms", meaning: "Şartlar, Koşullar", example_en: "Read the [Terms] and Conditions.", example_tr: "Şartları ve Koşulları okuyun.", synonyms: "conditions, rules", image: "https://loremflickr.com/350/180/terms,conditions" },
-            { word: "baby", meaning: "bebek", example_en: "The [baby] is sleeping now.", example_tr: "Bebek şimdi uyuyor.", synonyms: "infant, child", image: "https://loremflickr.com/350/180/baby" },
-            { word: "back", meaning: "geri, sırt", example_en: "Come [back] home soon.", example_tr: "Yakında eve geri gel.", synonyms: "behind, rear", image: "https://loremflickr.com/350/180/back" },
-            { word: "bad", meaning: "kötü", example_en: "I had a [bad] dream last night.", example_tr: "Dün gece kötü bir rüya gördüm.", synonyms: "poor, evil", image: "https://loremflickr.com/350/180/bad,dream" },
-            { word: "bag", meaning: "çanta", example_en: "Put the books in the [bag].", example_tr: "Kitapları çantanın içine koy.", synonyms: "sack, holder", image: "https://loremflickr.com/350/180/bag" },
-            { word: "ball", meaning: "top", example_en: "Let's play with the [ball].", example_tr: "Topla oynayalım.", synonyms: "sphere", image: "https://loremflickr.com/350/180/ball,toy" },
-            { word: "banana", meaning: "muz", example_en: "I like eating a [banana].", example_tr: "Muz yemeyi severim.", synonyms: "fruit", image: "https://loremflickr.com/350/180/banana" },
-            { word: "band", meaning: "müzik grubu, bant", example_en: "The rock [band] is famous.", example_tr: "Rock grubu ünlüdür.", synonyms: "group, strip", image: "https://loremflickr.com/350/180/band,music" },
-            { word: "bank", meaning: "banka, nehir kenarı", example_en: "I need to go to the [bank].", example_tr: "Bankaya gitmem gerekiyor.", synonyms: "financial institution", image: "https://loremflickr.com/350/180/bank" },
-            { word: "bath", meaning: "banyo, yıkanmak", example_en: "I need to take a [bath].", example_tr: "Banyo yapmam gerekiyor.", synonyms: "wash, soak", image: "https://loremflickr.com/350/180/bath" },
-            { word: "bathroom", meaning: "banyo odası, tuvalet", example_en: "Where is the [bathroom]?", example_tr: "Banyo nerede?", synonyms: "washroom, restroom", image: "https://loremflickr.com/350/180/bathroom" }
+            { word: "article", meaning: "makale, eşya", example_en: "I read an [article] about science.", example_tr: "Bilim hakkında bir makale okudum.", synonyms: "piece, item", image: "https://media.istockphoto.com/id/1214267514/tr/foto%C4%9Fraf/k%C4%B1demli-bir-adam-yazar-k%C3%BCt%C3%BCphane-%C3%A7al%C4%B1%C5%9Fan%C4%B1-%C3%BCniversite-profes%C3%B6r%C3%BC-bilim-adam%C4%B1-beyaz-sakall%C4%B1.jpg?s=170667a&w=0&k=20&c=Z_eFFzSjnC9U6xlCUfogMPZORjcm63XJFhE01Y1j5SM=" },
+            { word: "artist", meaning: "sanatçı", example_en: "She is a famous modern [artist].", example_tr: "O, ünlü bir modern sanatçıdır.", synonyms: "painter, creator", image: "https://www.shutterstock.com/image-photo/street-art-artistic-image-gangsta-600nw-2607481959.jpg" },
+            { word: "as", meaning: "olarak, gibi", example_en: "He works [as] a teacher.", example_tr: "O, bir öğretmen olarak çalışıyor.", synonyms: "like, since", image: "https://images.pexels.com/photos/5212317/pexels-photo-5212317.jpeg?cs=srgb&dl=pexels-max-fischer-5212317.jpg&fm=jpg" },
+            { word: "ask", meaning: "sormak, istemek", example_en: "Can I [ask] you a question?", example_tr: "Sana bir soru sorabilir miyim?", synonyms: "inquire, request", image: "https://images.pexels.com/photos/356079/pexels-photo-356079.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" },
+            { word: "at", meaning: "-de, -da (yerde)", example_en: "I am [at] the bus stop.", example_tr: "Otobüs durağındayım.", synonyms: "near, in", image: "https://www.shutterstock.com/shutterstock/videos/3727705837/thumb/8.jpg?ip=x480" },
+            { word: "August", meaning: "Ağustos", example_en: "Summer ends in [August].", example_tr: "Yaz, Ağustosta biter.", synonyms: "summer month", image: "https://media.istockphoto.com/id/490787358/tr/foto%C4%9Fraf/sunflower.jpg?s=612x612&w=0&k=20&c=HDvKVkaDTrccyRkCvumO_k6ZFog7x2VvGmc3Z7FE-r4=" },
+            { word: "aunt", meaning: "teyze, hala", example_en: "My [aunt] lives in Ankara.", example_tr: "Teyzem Ankara'da yaşıyor.", synonyms: "relative", image: "https://media.istockphoto.com/id/503946251/tr/foto%C4%9Fraf/ankara-atakule.jpg?s=612x612&w=0&k=20&c=Qu2rEMcZhs68EnZybE2m4zZqlown8xamps07lQc5VGA=" },
+            { word: "autumn", meaning: "sonbahar", example_en: "Leaves change color in [autumn].", example_tr: "Sonbaharda yapraklar renk değiştirir.", synonyms: "fall", image: "https://media.istockphoto.com/id/1176602671/tr/foto%C4%9Fraf/d%C3%BC%C5%9Fen-sonbahar-g%C3%BCn-bat%C4%B1m%C4%B1ndan-%C3%B6nce-yapraklar%C4%B1.jpg?s=612x612&w=0&k=20&c=gfgbN3Pia6NQM4nRtzuhwgOAnDWTyINCh6_mdu21lxM=" },
+            { word: "away", meaning: "uzakta, uzağa", example_en: "Go [away] from the window.", example_tr: "Pencereden uzaklaş.", synonyms: "far, off", image: "https://images.pexels.com/photos/1906795/pexels-photo-1906795.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" },
+            { word: "Terms", meaning: "Şartlar, Koşullar", example_en: "Read the [Terms] and Conditions.", example_tr: "Şartları ve Koşulları okuyun.", synonyms: "conditions, rules", image: "https://s.yimg.com/ny/api/res/1.2/lCQIGqQ9chL9mQzPugAKlw--/YXBwaWQ9aGlnaGxhbmRlcjt3PTI0MDA7aD0xMzQ2/https://media.zenfs.com/en/insidermonkey.com/48341386ad24acaf663b820ad1357f86" },
+            { word: "baby", meaning: "bebek", example_en: "The [baby] is sleeping now.", example_tr: "Bebek şimdi uyuyor.", synonyms: "infant, child", image: "https://cdn.pixabay.com/photo/2022/09/29/03/17/baby-7486419_640.jpg" },
+            { word: "back", meaning: "geri, sırt", example_en: "Come [back] home soon.", example_tr: "Yakında eve geri gel.", synonyms: "behind, rear", image: "https://media.istockphoto.com/id/1514023499/tr/foto%C4%9Fraf/unrecognizable-woman-pulling-suitcase-into-apartment.jpg?s=612x612&w=0&k=20&c=R_UeZqU3S0yEOrvQrV5pA11bXIYAdORbDYh1avfIONM=" },
+            { word: "bad", meaning: "kötü", example_en: "I had a [bad] dream last night.", example_tr: "Dün gece kötü bir rüya gördüm.", synonyms: "poor, evil", image: "https://media.istockphoto.com/id/1467069635/tr/foto%C4%9Fraf/3d-rendering-of-cozy-bed-illuminated-by-lamp-the-bed-flying-over-fluffy-clouds-at-night.jpg?b=1&s=612x612&w=0&k=20&c=oAIQToADhsvQ_rXktwU9YEFbx7itEF_lQJ6QzpPGuhE=" },
+            { word: "bag", meaning: "çanta", example_en: "Put the books in the [bag].", example_tr: "Kitapları çantanın içine koy.", synonyms: "sack, holder", image: "https://images.pexels.com/photos/2905238/pexels-photo-2905238.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" },
+            { word: "ball", meaning: "top", example_en: "Let's play with the [ball].", example_tr: "Topla oynayalım.", synonyms: "sphere", image: "https://www.cocukvegenc.com/wp-content/uploads/2016/10/shutterstock_302442896.jpg" },
+            { word: "banana", meaning: "muz", example_en: "I like eating a [banana].", example_tr: "Muz yemeyi severim.", synonyms: "fruit", image: "https://images.pexels.com/photos/1321855/pexels-photo-1321855.jpeg" },
+            { word: "band", meaning: "müzik grubu, bant", example_en: "The rock [band] is famous.", example_tr: "Rock grubu ünlüdür.", synonyms: "group, strip", image: "https://media.istockphoto.com/id/1125877063/tr/foto%C4%9Fraf/%C5%9Fark%C4%B1-ve-gitar-%C3%A7almak-kar%C4%B1%C5%9F%C4%B1k-%C4%B1rk-kad%C4%B1n.jpg?b=1&s=612x612&w=0&k=20&c=82osS0HMGK_pTVSer-A7eb9sdI-LYCw6rr85XrdaoTc=" },
+            { word: "bank", meaning: "banka, nehir kenarı", example_en: "I need to go to the [bank].", example_tr: "Bankaya gitmem gerekiyor.", synonyms: "financial institution", image: "https://abcgazetesi.com.tr/d/news/536040.jpg" },
+            { word: "bath", meaning: "banyo, yıkanmak", example_en: "I need to take a [bath].", example_tr: "Banyo yapmam gerekiyor.", synonyms: "wash, soak", image: "https://images.pexels.com/photos/16322579/pexels-photo-16322579/free-photo-of-kiz-sapka-cocuk-cocukluk.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" },
+            { word: "bathroom", meaning: "banyo odası, tuvalet", example_en: "Where is the [bathroom]?", example_tr: "Banyo nerede?", synonyms: "washroom, restroom", image: "https://images.pexels.com/photos/2134224/pexels-photo-2134224.jpeg?cs=srgb&dl=pexels-quang-nguyen-vinh-222549-2134224.jpg&fm=jpg" }
         ];
 
         let currentIndex = 0;
         const container = document.getElementById('card-container');
-        const infoBar = document.getElementById('info-bar');
+        const infoText = document.getElementById('info-text');
 
         // Sesli Okuma Fonksiyonu
         function speakWord(text) {
             if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
                 const msg = new SpeechSynthesisUtterance();
                 msg.text = text;
                 msg.lang = 'en-US'; 
+                msg.rate = 0.9; 
                 window.speechSynthesis.speak(msg);
             }
         }
 
-        // Ana Kart Oluşturma Fonksiyonu
+        // Kart Oluşturma
         function createCard(data) {
             const { word, meaning, image, example_en, example_tr, synonyms } = data;
             
-            // Köşeli parantez kontrolü ve vurgulama
             let highlightedExample = example_en;
             if (example_en.includes('[')) {
                 highlightedExample = example_en
                     .replace(`[${word}]`, `<span class="highlight">${word}</span>`)
-                    .replace(`[${word.charAt(0).toUpperCase() + word.slice(1)}]`, `<span class="highlight">${word.charAt(0).toUpperCase() + word.slice(1)}</span>`); // Baş harf büyükse
+                    .replace(`[${word.charAt(0).toUpperCase() + word.slice(1)}]`, `<span class="highlight">${word.charAt(0).toUpperCase() + word.slice(1)}</span>`); 
             } else {
-                // Parantez yoksa kelimeyi bulup vurgula (büyük/küçük harf duyarsız)
                 const regex = new RegExp(`\\b${word}\\b`, 'gi');
                 highlightedExample = example_en.replace(regex, (match) => `<span class="highlight">${match}</span>`);
             }
             
-            // Eş anlamlı yoksa tire koy
             const synonymsText = synonyms || '-';
 
             const cardHTML = `
-                <div class="card" onclick="nextCard()">
+                <div class="card" id="active-card" onclick="nextCard()">
                     <div class="header">
                         <div class="word-row">
-                            <i class="fas fa-volume-up speaker-icon" onclick="event.stopPropagation(); speakWord('${word}')"></i>
+                            <i class="fas fa-volume-up speaker-icon" title="Dinle" onclick="event.stopPropagation(); speakWord('${word}')"></i>
                             <h1>${word}</h1>
                         </div>
                         <p class="meaning">${meaning}</p>
                     </div>
 
                     <div class="image-container">
-                        <img src="${image}" alt="${word} Görseli" class="main-img" onerror="this.onerror=null;this.src='https://via.placeholder.com/350x200/CCCCCC/666666?text=Resim+Yok'">
+                        <img src="${image}" alt="${word}" class="main-img" loading="lazy">
                         <i class="fas fa-bolt flash-icon"></i>
                     </div>
 
@@ -176,7 +191,7 @@
 
                     <div class="box small">
                         <div class="row">
-                            <span class="tag">Eş An.</span>
+                            <span class="tag">Eş A.</span>
                             <div class="content">
                                 <p class="synonyms-text">${synonymsText}</p>
                             </div>
@@ -186,26 +201,46 @@
             `;
             
             container.innerHTML = cardHTML;
+            
+            setTimeout(() => {
+                const card = document.getElementById('active-card');
+                if(card) card.classList.add('active');
+            }, 50);
+
             updateInfoBar();
         }
         
-        // Bilgi Çubuğunu Güncelleme
         function updateInfoBar() {
-            infoBar.textContent = `Kart ${currentIndex + 1} / ${wordList.length}`;
+            infoText.textContent = `Kart ${currentIndex + 1} / ${wordList.length}`;
         }
 
-        // Sonraki Karta Geçme Fonksiyonu
         function nextCard() {
             currentIndex = (currentIndex + 1) % wordList.length;
             createCard(wordList[currentIndex]);
         }
+        
+        function prevCard() {
+            currentIndex = (currentIndex - 1 + wordList.length) % wordList.length;
+            createCard(wordList[currentIndex]);
+        }
 
-        // Sayfa yüklendiğinde ilk kartı göster
+        // Klavye Kontrolleri
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                nextCard();
+            } else if (e.key === 'ArrowLeft') {
+                prevCard();
+            } else if (e.key === 'ArrowUp') {
+                speakWord(wordList[currentIndex].word);
+            }
+        });
+
+        // Başlangıç
         window.onload = function() {
             if (wordList.length > 0) {
                 createCard(wordList[currentIndex]);
             } else {
-                container.innerHTML = '<h2>Kelime listesi boş.</h2>';
+                container.innerHTML = '<h2>Liste boş.</h2>';
             }
         };
     </script>
